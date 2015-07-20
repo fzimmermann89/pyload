@@ -146,7 +146,7 @@ def logout():
     return render_to_response("logout.html", proc=[pre_processor])
 
 
-#@route("/")
+@route("/")
 @route("/home")
 @login_required("LIST")
 def home():
