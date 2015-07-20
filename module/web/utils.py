@@ -108,14 +108,14 @@ def login_required(perm=None):
                         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                             return HTTPError(403, "Forbidden")
                         else:
-                            return redirect("nopermission")
+                            return redirect("./pyload/nopermission")
 
                 return func(*args, **kwargs)
             else:
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return HTTPError(403, "Forbidden")
                 else:
-                    return redirect("login")
+                    return redirect("./pyload/login")
 
         return _view
 
