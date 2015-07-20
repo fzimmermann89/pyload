@@ -1,0 +1,302 @@
+module/web/media/default/css/default.css 
+=========================================
+Change   url(/media/default/img/*)
+into     url(../img/*)
+
+eg:
+  url(../img/wiki-tools-index.png)
+  url(../img/wiki-tools-recent.png) 0px 1px no-repeat;
+  url(../img/user-actions-logout.png) 0px 1px no-repeat;
+  url(../img/user-info.png) 0px 1px no-repeat;
+  url(../img/user-actions-admin.png) 0px 1px no-repeat;
+  url(../img/user-actions-profile.png) 0px 1px no-repeat;
+  url(../img/page-tools-edit.png) 0px 1px no-repeat;
+  url(../img/page-tools-source.png) 0px 1px no-repeat;
+  url(../img/page-tools-revisions.png) 0px 1px no-repeat;
+  url(../img/page-tools-subscribe.png) 0px 1px no-repeat;
+  url(../img/page-tools-backlinks.png) 0px 1px no-repeat;
+  url(../img/control_play.png) 0px 1px no-repeat;
+  url(../img/status_None.png) 0px 1px no-repeat;
+  url(../img/reconnect.png) 0px 1px no-repeat;
+  url(../img/control_play_blue.png) 0px 1px no-repeat;
+  url(../img/control_cancel.png) 0px 1px no-repeat;
+  url(../img/control_cancel_blue.png) 0px 1px no-repeat;
+  url(../img/control_pause.png) 0px 1px no-repeat;
+  url(../img/control_pause_blue.png) 0px 1px no-repeat;
+  url(../img/control_stop.png) 0px 1px no-repeat;
+  url(../img/control_stop_blue.png) 0px 1px no-repeat;
+  url(../img/control_add.png) 0px 1px no-repeat;
+  url(../img/control_add_blue.png) 0px 1px no-repeat;
+  url(../img/cog.png) 0px 1px no-repeat;
+  url(../img/head_bg1.png) bottom left repeat-x;
+  url(../img/tabs-border-bottom.png) 0 100% repeat-x;
+  url(../img/tab-background.png) 0 100% repeat-x;
+  url(../img/error.png) no-repeat #000 7px 10px;
+  url(../img/success.png) no-repeat #000 7px 10px;
+  url(../img/notice.png) no-repeat #000 7px 10px;
+
+module/web/media/default/css/MooDialog.css 
+==========================================
+Change   url(/media/default/img/*)
+into     url(../img/*)
+eg:
+  url(../img/dialog-close.png) no-repeat;
+  url(../img/dialog-warning.png) no-repeat;
+  url(../img/dialog-question.png) no-repeat;
+  url(../img/dialog-error.png) no-repeat;
+
+  
+module/web/media/js/admin.js 
+============================
+Change   url:"/api/*"
+into     url:"api/*"
+eg:
+  url:"api/kill"
+  url:"api/restart"
+
+  
+module/web/media/js/base.coffee 
+===============================
+change:   url: '/api/*'
+into:     url: 'api/*'
+
+change:   url: '/json/*'
+into:     url: 'json/*'
+
+eg:
+  url: 'api/unpauseServer'
+  url: 'api/stopAllDownloads'
+  url: 'api/pauseServer'
+  url: "json/status"
+  url: "json/set_captcha"
+
+module/web/media/js/base.js 
+===========================
+Change:   /json/* or /api/*
+into:     json/*  or api/*
+
+eg:
+  url:"json/set_captcha"
+  url:"api/unpauseServer"
+  url:"api/stopAllDownloads"
+  url: "api/pauseServer"
+  url:"json/status"
+  url:"json/set_captcha"
+
+module/web/media/js/package_ui.js 
+=================================
+change /api/* /json/* /media/*
+into    api/* json/*  media/*
+
+eg:
+  url: 'api/deleteFinished',
+  url: 'api/restartFailed',
+  url: 'json/package_order/' + order[0],
+  url: 'json/package/' + this.id,
+
+  src='media/default/img/{icon}'
+  src='media/default/img/delete.png'
+  src='media/default/img/arrow_refresh.png' /></div>";
+
+  url: 'api/deleteFiles/[' + this + "]",
+  url: 'api/restartFile/' + this,
+  imgs[0].set("src", "media/default/img/status_queue.png");
+  url: 'api/deletePackages/[' + this.id + "]",
+  url: 'api/restartPackage/' + this.id,
+  url: 'json/move_package/' + ((this.ui.type + 1) % 2) + "/" + this.id,
+  url: 'json/link_order/' + order[0],
+
+
+module/web/media/js/settings.coffee 
+===================================
+change /json/*
+into   json/*
+
+eg:
+  "url" : "json/load_config/#{section}"
+  "url": "json/save_config"
+
+  
+module/web/media/js/settings.js
+===============================
+change /json/*
+into   json/*
+
+eg
+  url:"json/load_config/"
+  url:"json/save_config"
+
+
+module/web/pyload_app.py
+========================
+comment the following lines:
+  #@route("/logs/:item")
+  #@route("/logs/:item", method="POST")
+
+change function definition
+from:
+  def logs(item=-1):
+into  
+  def logs():
+
+add as first line in this method:
+ 0.4.9:
+  item = request.query.item or '-1'
+ 0.4.8:
+  item = request.GET.get('item', '-1') 
+    
+change 
+  redirect("/setup")
+  redirect("/")
+  redirect("/login")
+into 
+  redirect("../setup")
+  return redirect("../")
+  return redirect("../login")
+  
+module/web/templates/default/admin.html
+=======================================
+change /json/*
+into   json/*
+
+eg:
+  action="json/change_password"
+
+  
+module/web/templates/default/base.html
+=======================================
+change /logout /admin /info /media/*  /collector  /downloads  /filemanager  /logs /settings
+info   logout  admin  info  media/*   collector   downloads   filemanager   logs  settings
+
+also change links to "/"
+into                 "home"
+
+eg:
+  href="media/default/css/default.css"/>
+  href="media/default/css/window.css"/>
+  href="media/default/css/MooDialog.css"/>
+  src="media/js/mootools-core-1.4.1.js"
+  src="media/js/mootools-more-1.4.0.1.js"
+  src="media/js/MooDialog_static.js"
+  src="media/js/purr_static.js"
+  src="media/js/base.js"
+  src="media/default/img/images.png" 
+  src="media/default/img/head-login.png" 
+  href="logout"  
+  href="admin"
+  href="info"
+  href="home">
+  src="media/default/img/pyload-logo-edited3.5-new-font-small.png"
+  href="home"
+  src="media/default/img/head-menu-home.png"
+  href="queue"
+  src="media/default/img/head-menu-queue.png"
+  href="collector"
+  src="media/default/img/head-menu-collector.png
+  href="downloads"
+  src="media/default/img/head-menu-development.png"
+  href="filemanager"
+  src="media/default/img/head-menu-download.png"
+  href="logs"
+  src="media/default/img/head-menu-index.png"
+  href="settings"
+  src="media/default/img/head-menu-config.png"
+  src="media/default/img/ajax-loader.gif"
+
+
+module/web/templates/default/captcha.html
+=========================================
+change /json/*
+into   json/*
+
+eg:
+  action="json/set_captcha"
+
+
+module/web/templates/default/filemanager.html
+=============================================
+change  /media/*    /filemanager_ui.js
+into    media/*     filemanager_ui.js
+eg:
+  src="filemanager_ui.js"
+  src="media/default/img/pencil.png"
+  src="media/default/img/delete.png"
+  src="media/default/img/add_folder.png"
+
+module/web/templates/default/folder.html
+========================================
+change  /media/*
+into    media/*
+eg:
+  src="media/default/img/pencil.png"
+  src="media/default/img/delete.png"
+  src="media/default/img/add_folder.png"
+
+module/web/templates/default/home.html
+======================================
+change  /media/*  /json/*
+into    media/*   json/*
+eg:
+  url: 'json/abort_link/'
+  src="media/default/img/head-menu-home.png"
+  src="media/default/img/head-menu-queue.png"
+  src="media/default/img/head-menu-collector.png"
+  src="media/default/img/head-menu-development.png"
+  src="media/default/img/head-menu-download.png"
+  src="media/default/img/head-menu-index.png"
+  src="media/default/img/head-menu-config.png"
+
+module/web/templates/default/logs.html
+======================================
+change  /media/* 
+into    media/*
+eg:
+  href="media/default/css/log.css"
+
+AND
+    change 
+      /logs/1 into logs?item=1
+      /logs/n into logs?item=n
+      /logs   into logs?item=-100%
+    eg:
+      href="{{ "logs?item=1" }}">&lt;&lt; {{_("Start")}}</a>  <a href="{{ "logs?item=" + iprev|string }}">&lt; {{_("prev")}}</a>  <a href="{{ "logs?item=" + inext|string }}">{{_("next")}} &gt;</a> <a href="logs?item=-1">{{_("End")}} &gt;&gt;</a></div>
+      
+module/web/templates/default/pathchooser.html
+=============================================
+change  /media/*  /filechooser  /pathchooser
+into    media/*   filechooser   pathchooser
+
+eg
+  href="media/default/css/pathchooser.css"
+  etc.
+
+module/web/templates/default/queue.html
+=======================================
+change  /media/*  /json
+into    media/*   json
+eg
+  src="media/js/package_ui.js"
+  src="media/default/img/folder.png"
+  src="media/default/img/delete.png"
+  src="media/default/img/arrow_refresh.png"
+  src="media/default/img/pencil.png"
+  src="media/default/img/package_go.png"
+  action="json/edit_package"
+
+module/web/templates/default/settings.html
+==========================================
+change  /media/*
+into    media/*
+eg
+  src="media/js/tinytab_static.js"
+  src="media/js/MooDropMenu_static.js"
+  src="media/js/settings.js"
+
+
+module/web/templates/default/window.html
+========================================
+change  /media/*  /json
+into    media/*   json
+eg
+  action="json/add_package"
+  src="media/default/img/parseUri.png"
