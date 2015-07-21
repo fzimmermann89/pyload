@@ -16,11 +16,19 @@
 
     @author: RaNaN
 """
-from bottle import request, redirect, HTTPError, ServerAdapter
+from bottle import request, HTTPResponse, HTTPError, ServerAdapter
 
 from webinterface import env, TEMPLATE
 
 from module.Api import has_permission, PERMS, ROLE
+
+def relative_redirect(url, code=None):
+    """ Aborts execution and causes a 303 or 302 redirect, depending on
+        the HTTP protocol version. """
+    if code is None:
+        code = 303 if request.get('SERVER_PROTOCOL') == "HTTP/1.1" else 302
+    raise HTTPResponse("", status=code, header=dict(Location=url))
+	
 
 def render_to_response(name, args={}, proc=[]):
     for p in proc:
@@ -108,14 +116,14 @@ def login_required(perm=None):
                         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                             return HTTPError(403, "Forbidden")
                         else:
-                            return redirect("nopermission")
+                            return relative_redirect("nopermission")
 
                 return func(*args, **kwargs)
             else:
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return HTTPError(403, "Forbidden")
                 else:
-                    return redirect("login")
+                    return relative_redirect("login")
 
         return _view
 
