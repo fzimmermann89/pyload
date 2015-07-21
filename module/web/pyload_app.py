@@ -27,25 +27,20 @@ from os.path import isdir, isfile, join, abspath
 from sys import getfilesystemencoding
 from urllib import unquote
 
-from bottle import route, static_file, request, response, HTTPResponse, HTTPError, error
+from bottle import route, static_file, request, response, HTTPError, error
 
 from webinterface import PYLOAD, PYLOAD_DIR, PROJECT_DIR, SETUP, env
 
 from utils import render_to_response, parse_permissions, parse_userdata, \
-    login_required, get_permission, set_permission, permlist, toDict, set_session
+    login_required, get_permission, set_permission, permlist, toDict, \
+	set_session, relative_redirect
 
 from filters import relpath, unquotepath
 
 from module.utils import formatSize, save_join, fs_encode, fs_decode
 
-# Helper
 
-def relative_redirect(url, code=None):
-    """ Aborts execution and causes a 303 or 302 redirect, depending on
-        the HTTP protocol version. """
-    if code is None:
-        code = 303 if request.get('SERVER_PROTOCOL') == "HTTP/1.1" else 302
-    raise HTTPResponse("", status=code, header=dict(Location=url))
+# Helper
 
 def pre_processor():
     s = request.environ.get('beaker.session')
