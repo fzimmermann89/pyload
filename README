@@ -1,6 +1,6 @@
 This version is not tested yet!
 
-This version is compatible to reverse proxy setups.
+This version is compatible with reverse proxy setups.
 E.g. www.example.com/some/path/pyload.
 
 Change Path Prefix = /some/path/pyload.
