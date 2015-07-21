@@ -16,9 +16,7 @@
 
     @author: RaNaN
 """
-from bottle import request, HTTPError, ServerAdapter
-
-from pyload_app import relative_redirect
+from bottle import request, redirect, HTTPError, ServerAdapter
 
 from webinterface import env, TEMPLATE
 
