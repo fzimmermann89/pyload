@@ -27,7 +27,7 @@ from os.path import isdir, isfile, join, abspath
 from sys import getfilesystemencoding
 from urllib import unquote
 
-from bottle import route, static_file, request, response, redirect, HTTPError, error
+from bottle import route, static_file, request, response, HTTPResponse, HTTPError, error
 
 from webinterface import PYLOAD, PYLOAD_DIR, PROJECT_DIR, SETUP, env
 
@@ -39,6 +39,13 @@ from filters import relpath, unquotepath
 from module.utils import formatSize, save_join, fs_encode, fs_decode
 
 # Helper
+
+def relative_redirect(url, code=None):
+    """ Aborts execution and causes a 303 or 302 redirect, depending on
+        the HTTP protocol version. """
+    if code is None:
+        code = 303 if request.get('SERVER_PROTOCOL') == "HTTP/1.1" else 302
+    raise HTTPResponse("", status=code, header=dict(Location=url))
 
 def pre_processor():
     s = request.environ.get('beaker.session')
@@ -115,7 +122,7 @@ def favicon():
 @route('/login', method="GET")
 def login():
     if not PYLOAD and SETUP:
-        redirect("setup")
+        relative_redirect("setup")
     else:
         return render_to_response("login.html", proc=[pre_processor])
 
@@ -136,7 +143,7 @@ def login_post():
         return render_to_response("login.html", {"errors": True}, [pre_processor])
 
     set_session(request, info)
-    return redirect("home")
+    return relative_redirect("home")
 
 
 @route("/logout")
@@ -155,7 +162,7 @@ def home():
     except:
         s = request.environ.get('beaker.session')
         s.delete()
-        return redirect("login")
+        return relative_redirect("login")
 
     for link in res:
         if link["status"] == 12:
