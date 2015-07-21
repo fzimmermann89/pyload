@@ -1,15 +1,10 @@
 This version is not tested yet!
 
-This version is compatible with reverse proxy setups.
+This version is compatible with reverse proxy and probably fastcgi setups in a subdir.
 E.g. www.example.com/some/path/pyload.
-
-Change Path Prefix = /some/path/pyload.
-
-Path Prefix = /some/path/download
  
-I followed mostly the instructions of mijs from the pyload forum.
+Thanks to mijs from the pyload forum, where I took many changes from.
 http://forum.pyload.org/viewtopic.php?f=13&t=1110&sid=4cf7ed2f1b1715bb195bdb623048dcc0
-
 
 
 Description
