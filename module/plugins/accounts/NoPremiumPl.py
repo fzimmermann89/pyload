@@ -11,7 +11,8 @@ from module.plugins.internal.Account import Account
 class NoPremiumPl(Account):
     __name__    = "NoPremiumPl"
     __type__    = "account"
-    __version__ = "0.02"
+    __version__ = "0.04"
+    __status__  = "testing"
 
     __description__ = "NoPremium.pl account plugin"
     __license__     = "GPLv3"
@@ -31,51 +32,52 @@ class NoPremiumPl(Account):
     _pwd = None
 
 
-    def loadAccountInfo(self, name, req):
+    def parse_info(self, user, password, data, req):
         self._req = req
         try:
-            result = json_loads(self.runAuthQuery())
+            result = json_loads(self.run_auth_query())
         except Exception:
-            # todo: return or let it be thrown?
+            #@TODO: return or let it be thrown?
             return
 
         premium = False
         valid_untill = -1
 
-        if "expire" in result.keys() and result["expire"]:
+        if "expire" in result.keys() and result['expire']:
             premium = True
-            valid_untill = time.mktime(datetime.datetime.fromtimestamp(int(result["expire"])).timetuple())
+            valid_untill = time.mktime(datetime.datetime.fromtimestamp(int(result['expire'])).timetuple())
 
-        traffic_left = result["balance"] * 1024
+        traffic_left = result['balance'] * 1024
 
         return {'validuntil' : valid_untill,
                 'trafficleft': traffic_left,
                 'premium'    : premium     }
 
 
-    def login(self, user, data, req):
+    def login(self, user, password, data, req):
         self._usr = user
-        self._pwd = hashlib.sha1(hashlib.md5(data["password"]).hexdigest()).hexdigest()
+        self._pwd = hashlib.sha1(hashlib.md5(password).hexdigest()).hexdigest()
         self._req = req
 
         try:
-            response = json_loads(self.runAuthQuery())
+            response = json_loads(self.run_auth_query())
         except Exception:
-            self.wrongPassword()
+            self.login_fail()
 
         if "errno" in response.keys():
-            self.wrongPassword()
+            self.login_fail()
 
         data['usr'] = self._usr
         data['pwd'] = self._pwd
 
 
-    def createAuthQuery(self):
+    def create_auth_query(self):
         query = self.API_QUERY
-        query["username"] = self._usr
-        query["password"] = self._pwd
+        query['username'] = self._usr
+        query['password'] = self._pwd
         return query
 
 
-    def runAuthQuery(self):
-        return self._req.load(self.API_URL, post=self.createAuthQuery())
+    def run_auth_query(self):
+        return self.load(self.API_URL,
+                         post=self.create_auth_query())

@@ -2,13 +2,15 @@
 
 import pycurl
 
-from module.plugins.internal.Hook import Hook
+from module.plugins.internal.Addon import Addon
+from module.plugins.internal.Plugin import encode
 
 
-class UserAgentSwitcher(Hook):
+class UserAgentSwitcher(Addon):
     __name__    = "UserAgentSwitcher"
     __type__    = "hook"
-    __version__ = "0.09"
+    __version__ = "0.11"
+    __status__  = "testing"
 
     __config__ = [("activated"     , "bool", "Activated"                             , True                                                                      ),
                   ("connecttimeout", "int" , "Connection timeout in seconds"         , 60                                                                        ),
@@ -20,17 +22,10 @@ class UserAgentSwitcher(Hook):
     __authors__     = [("Walter Purcaro", "vuolter@gmail.com")]
 
 
-    interval = 0  #@TODO: Remove in 0.4.10
-
-
-    def setup(self):
-        self.info = {}  #@TODO: Remove in 0.4.10
-
-
-    def downloadPreparing(self, pyfile):
-        connecttimeout = self.getConfig('connecttimeout')
-        maxredirs      = self.getConfig('maxredirs')
-        useragent      = self.getConfig('useragent').encode("utf8", "replace")  #@TODO: Remove `encode` in 0.4.10
+    def download_preparing(self, pyfile):
+        connecttimeout = self.get_config('connecttimeout')
+        maxredirs      = self.get_config('maxredirs')
+        useragent      = self.get_config('useragent')
 
         if connecttimeout:
             pyfile.plugin.req.http.c.setopt(pycurl.CONNECTTIMEOUT, connecttimeout)
@@ -39,5 +34,5 @@ class UserAgentSwitcher(Hook):
             pyfile.plugin.req.http.c.setopt(pycurl.MAXREDIRS, maxredirs)
 
         if useragent:
-            self.logDebug("Use custom user-agent string: " + useragent)
-            pyfile.plugin.req.http.c.setopt(pycurl.USERAGENT, useragent)
+            self.log_debug("Use custom user-agent string: " + useragent)
+            pyfile.plugin.req.http.c.setopt(pycurl.USERAGENT, encode(useragent))

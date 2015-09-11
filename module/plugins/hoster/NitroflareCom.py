@@ -2,14 +2,15 @@
 
 import re
 
-from module.plugins.internal.ReCaptcha import ReCaptcha
+from module.plugins.captcha.ReCaptcha import ReCaptcha
 from module.plugins.internal.SimpleHoster import SimpleHoster
 
 
 class NitroflareCom(SimpleHoster):
     __name__    = "NitroflareCom"
     __type__    = "hoster"
-    __version__ = "0.14"
+    __version__ = "0.15"
+    __status__  = "testing"
 
     __pattern__ = r'https?://(?:www\.)?nitroflare\.com/view/(?P<ID>[\w^_]+)'
     __config__  = [("use_premium", "bool", "Use premium account if available", True)]
@@ -31,15 +32,15 @@ class NitroflareCom(SimpleHoster):
     # ERROR_PATTERN        = r'downloading is not possible'
 
 
-    def handleFree(self, pyfile):
-        # used here to load the cookies which will be required later
+    def handle_free(self, pyfile):
+        #: Used here to load the cookies which will be required later
         self.load(pyfile.url, post={'goToFreePage': ""})
 
         self.load("http://nitroflare.com/ajax/setCookie.php", post={'fileId': self.info['pattern']['ID']})
         self.html = self.load("http://nitroflare.com/ajax/freeDownload.php",
                               post={'method': "startTimer", 'fileId': self.info['pattern']['ID']})
 
-        self.checkErrors()
+        self.check_errors()
 
         try:
             js_file   = self.load("http://nitroflare.com/js/downloadFree.js?v=1.0.1")
@@ -59,4 +60,4 @@ class NitroflareCom(SimpleHoster):
                                     'recaptcha_challenge_field': challenge,
                                     'recaptcha_response_field' : response})
 
-        return super(NitroflareCom, self).handleFree(pyfile)
+        return super(NitroflareCom, self).handle_free(pyfile)

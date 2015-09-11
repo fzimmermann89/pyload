@@ -3,14 +3,15 @@
 import re
 import urlparse
 
-from module.plugins.internal.ReCaptcha import ReCaptcha
+from module.plugins.captcha.ReCaptcha import ReCaptcha
 from module.plugins.internal.SimpleHoster import SimpleHoster, create_getInfo
 
 
 class CrockoCom(SimpleHoster):
     __name__    = "CrockoCom"
     __type__    = "hoster"
-    __version__ = "0.20"
+    __version__ = "0.21"
+    __status__  = "testing"
 
     __pattern__ = r'http://(?:www\.)?(crocko|easy-share)\.com/\w+'
     __config__  = [("use_premium", "bool", "Use premium account if available", True)]
@@ -32,14 +33,14 @@ class CrockoCom(SimpleHoster):
     NAME_REPLACEMENTS = [(r'<.*?>', '')]
 
 
-    def handleFree(self, pyfile):
+    def handle_free(self, pyfile):
         if "You need Premium membership to download this file." in self.html:
             self.fail(_("You need Premium membership to download this file"))
 
         for _i in xrange(5):
             m = re.search(self.CAPTCHA_PATTERN, self.html)
             if m:
-                url = urlparse.urljoin("http://crocko.com", m.group(1))
+                url = urlparse.urljoin("http://crocko.com/", m.group(1))
                 self.wait(m.group(2))
                 self.html = self.load(url)
             else:
@@ -57,8 +58,8 @@ class CrockoCom(SimpleHoster):
             inputs['recaptcha_response_field'], inputs['recaptcha_challenge_field'] = recaptcha.challenge()
             self.download(action, post=inputs)
 
-            if self.checkDownload({"captcha": recaptcha.KEY_AJAX_PATTERN}):
-                self.invalidCaptcha()
+            if self.check_download({'captcha': recaptcha.KEY_AJAX_PATTERN}):
+                self.captcha.invalid()
             else:
                 break
         else:

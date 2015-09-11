@@ -7,21 +7,22 @@ from module.plugins.internal.Account import Account
 class HighWayMe(Account):
     __name__    = "HighWayMe.py"
     __type__    = "account"
-    __version__ = "0.03"
+    __version__ = "0.04"
+    __status__  = "testing"
 
     __description__ = """High-Way.me account plugin"""
     __license__     = "GPLv3"
     __authors__     = [("EvolutionClip", "evolutionclip@live.de")]
 
 
-    def loadAccountInfo(self, user, req):
+    def parse_info(self, user, password, data, req):
         premium     = False
         validuntil  = -1
         trafficleft = None
 
-        json_data = req.load('https://high-way.me/api.php?user')
+        json_data = self.load('https://high-way.me/api.php?user')
 
-        self.logDebug("JSON data: %s" % json_data)
+        self.log_debug("JSON data: %s" % json_data)
 
         json_data = json_loads(json_data)
 
@@ -39,10 +40,11 @@ class HighWayMe(Account):
                 'trafficleft': trafficleft}
 
 
-    def login(self, user, data, req):
-        html = req.load("https://high-way.me/api.php?login",
-                        post={'login': '1', 'user': user, 'pass': data['password']},
-                        decode=True)
+    def login(self, user, password, data, req):
+        html = self.load("https://high-way.me/api.php?login",
+                         post={'login': '1',
+                               'user': user,
+                               'pass': password})
 
         if 'UserOrPassInvalid' in html:
-            self.wrongPassword()
+            self.login_fail()

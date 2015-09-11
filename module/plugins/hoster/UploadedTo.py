@@ -4,15 +4,16 @@ import re
 import time
 import urlparse
 
-from module.network.RequestFactory import getURL
-from module.plugins.internal.ReCaptcha import ReCaptcha
+from module.network.RequestFactory import getURL as get_url
+from module.plugins.captcha.ReCaptcha import ReCaptcha
 from module.plugins.internal.SimpleHoster import SimpleHoster, create_getInfo
 
 
 class UploadedTo(SimpleHoster):
     __name__    = "UploadedTo"
     __type__    = "hoster"
-    __version__ = "0.94"
+    __version__ = "0.97"
+    __status__  = "testing"
 
     __pattern__ = r'https?://(?:www\.)?(uploaded\.(to|net)|ul\.to)(/file/|/?\?id=|.*?&id=|/)(?P<ID>\w+)'
     __config__  = [("use_premium", "bool", "Use premium account if available", True)]
@@ -23,7 +24,6 @@ class UploadedTo(SimpleHoster):
 
 
     CHECK_TRAFFIC = True
-    DISPOSITION   = False
 
     URL_REPLACEMENTS = [(__pattern__ + ".*", r'http://uploaded.net/file/\g<ID>')]
 
@@ -31,6 +31,7 @@ class UploadedTo(SimpleHoster):
 
     OFFLINE_PATTERN      = r'>Page not found'
     TEMP_OFFLINE_PATTERN = r'<title>uploaded\.net - Maintenance'
+    PREMIUM_ONLY_PATTERN = r'This file exceeds the max\. filesize which can be downloaded by free users'
 
     LINK_FREE_PATTERN    = r"url:\s*'(.+?)'"
     LINK_PREMIUM_PATTERN = r'<div class="tfree".*\s*<form method="post" action="(.+?)"'
@@ -40,13 +41,13 @@ class UploadedTo(SimpleHoster):
 
 
     @classmethod
-    def apiInfo(cls, url):
-        info = super(UploadedTo, cls).apiInfo(url)
+    def api_info(cls, url):
+        info = super(UploadedTo, cls).api_info(url)
 
         for _i in xrange(5):
-            html = getURL("http://uploaded.net/api/filemultiple",
-                          get={"apikey": cls.API_KEY, 'id_0': re.match(cls.__pattern__, url).group('ID')},
-                          decode=True)
+            html = get_url("http://uploaded.net/api/filemultiple",
+                           get={'apikey': cls.API_KEY,
+                                'id_0': re.match(cls.__pattern__, url).group('ID')})
 
             if html != "can't find request":
                 api = html.split(",", 4)
@@ -62,14 +63,14 @@ class UploadedTo(SimpleHoster):
 
 
     def setup(self):
-        self.multiDL = self.resumeDownload = self.premium
-        self.chunkLimit = 1  # critical problems with more chunks
+        self.multiDL = self.resume_download = self.premium
+        self.chunk_limit = 1  #: Critical problems with more chunks
 
 
-    def handleFree(self, pyfile):
+    def handle_free(self, pyfile):
         self.load("http://uploaded.net/language/en", just_header=True)
 
-        self.html = self.load("http://uploaded.net/js/download.js", decode=True)
+        self.html = self.load("http://uploaded.net/js/download.js")
 
         recaptcha = ReCaptcha(self)
         response, challenge = recaptcha.challenge()
@@ -77,9 +78,10 @@ class UploadedTo(SimpleHoster):
         self.html = self.load("http://uploaded.net/io/ticket/captcha/%s" % self.info['pattern']['ID'],
                               post={'recaptcha_challenge_field': challenge,
                                     'recaptcha_response_field' : response})
+        self.check_errors()
 
-        super(UploadedTo, self).handleFree(pyfile)
-        self.checkErrors()
+        super(UploadedTo, self).handle_free(pyfile)
+        self.check_errors()
 
 
 getInfo = create_getInfo(UploadedTo)

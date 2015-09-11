@@ -23,36 +23,36 @@ from module.plugins.internal.Account import Account
 class OboomCom(Account):
     __name__    = "OboomCom"
     __type__    = "account"
-    __version__ = "0.25"
+    __version__ = "0.27"
+    __status__  = "testing"
 
     __description__ = """Oboom.com account plugin"""
     __license__     = "GPLv3"
     __authors__     = [("stanley", "stanley.foerster@gmail.com")]
 
 
-    def loadAccountData(self, user, req):
-        passwd = self.getAccountData(user)['password']
+    def load_account_data(self, user, req):
+        passwd = self.get_info(user)['login']['password']
         salt   = passwd[::-1]
         pbkdf2 = PBKDF2(passwd, salt, 1000).hexread(16)
 
-        result = json_loads(req.load("https://www.oboom.com/1/login", get={"auth": user, "pass": pbkdf2}))
+        result = json_loads(self.load("http://www.oboom.com/1/login",  #@TODO: Revert to `https` in 0.4.10
+                                      get={'auth': user,
+                                           'pass': pbkdf2}))
 
-        if not result[0] == 200:
-            self.logWarning(_("Failed to log in: %s") % result[1])
-            self.wrongPassword()
+        if result[0] != 200:
+            self.log_warning(_("Failed to log in: %s") % result[1])
+            self.login_fail()
 
         return result[1]
 
 
-    def loadAccountInfo(self, name, req):
-        accountData = self.loadAccountData(name, req)
+    def parse_info(self, name, req):
+        account_data = self.load_account_data(name, req)
 
-        userData = accountData['user']
+        userData = account_data['user']
 
-        if userData['premium'] == "null":
-            premium = False
-        else:
-            premium = True
+        premium = userData['premium'] != "null"
 
         if userData['premium_unix'] == "null":
             validUntil = -1
@@ -62,9 +62,9 @@ class OboomCom(Account):
         traffic = userData['traffic']
 
         trafficLeft = traffic['current'] / 1024  #@TODO: Remove `/ 1024` in 0.4.10
-        maxTraffic = traffic['max'] / 1024  #@TODO: Remove `/ 1024` in 0.4.10
+        maxTraffic  = traffic['max'] / 1024  #@TODO: Remove `/ 1024` in 0.4.10
 
-        session = accountData['session']
+        session = account_data['session']
 
         return {'premium'    : premium,
                 'validuntil' : validUntil,
@@ -73,5 +73,5 @@ class OboomCom(Account):
                 'session'    : session}
 
 
-    def login(self, user, data, req):
-        self.loadAccountData(user, req)
+    def login(self, user, password, data, req):
+        self.load_account_data(user, req)

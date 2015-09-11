@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from module.plugins.internal.Hoster import Hoster
-from module.plugins.internal.SimpleHoster import create_getInfo
+from module.plugins.internal.Hoster import Hoster, create_getInfo
 
 
 class DeadHoster(Hoster):
     __name__    = "DeadHoster"
     __type__    = "hoster"
-    __version__ = "0.16"
+    __version__ = "0.19"
+    __status__  = "testing"
 
     __pattern__ = r'^unmatchable$'
 
@@ -17,15 +17,14 @@ class DeadHoster(Hoster):
 
 
     @classmethod
-    def apiInfo(cls, *args, **kwargs):
-        api = super(DeadHoster, cls).apiInfo(*args, **kwargs)
-        api['status'] = 1
-        return api
+    def get_info(cls, *args, **kwargs):
+        info = super(DeadHoster, cls).get_info(*args, **kwargs)
+        info['status'] = 1
+        return info
 
 
     def setup(self):
-        self.pyfile.error = "Hoster is no longer available"
-        self.offline()  #@TODO: self.offline("Hoster is no longer available")
+        self.offline(_("Hoster is no longer available"))
 
 
 getInfo = create_getInfo(DeadHoster)

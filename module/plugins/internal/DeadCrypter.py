@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from module.plugins.internal.Crypter import Crypter
-from module.plugins.internal.SimpleCrypter import create_getInfo
+from module.plugins.internal.Crypter import Crypter, create_getInfo
 
 
 class DeadCrypter(Crypter):
     __name__    = "DeadCrypter"
     __type__    = "crypter"
-    __version__ = "0.06"
+    __version__ = "0.09"
+    __status__  = "testing"
 
     __pattern__ = r'^unmatchable$'
 
@@ -17,15 +17,14 @@ class DeadCrypter(Crypter):
 
 
     @classmethod
-    def apiInfo(cls, *args, **kwargs):
-        api = super(DeadCrypter, cls).apiInfo(*args, **kwargs)
-        api['status'] = 1
-        return api
+    def get_info(cls, *args, **kwargs):
+        info = super(DeadCrypter, cls).get_info(*args, **kwargs)
+        info['status'] = 1
+        return info
 
 
     def setup(self):
-        self.pyfile.error = "Crypter is no longer available"
-        self.offline()  #@TODO: self.offline("Crypter is no longer available")
+        self.offline(_("Crypter is no longer available"))
 
 
 getInfo = create_getInfo(DeadCrypter)

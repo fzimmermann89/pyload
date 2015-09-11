@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from module.plugins.internal.Plugin import set_cookie
 from module.plugins.internal.SimpleCrypter import SimpleCrypter, create_getInfo
 
 
 class XFSCrypter(SimpleCrypter):
     __name__    = "XFSCrypter"
     __type__    = "crypter"
-    __version__ = "0.10"
+    __version__ = "0.13"
+    __status__  = "testing"
 
     __pattern__ = r'^unmatchable$'
 
@@ -32,14 +34,17 @@ class XFSCrypter(SimpleCrypter):
                 account      = self.account
             else:
                 account_name = (self.__name__ + ".py").replace("Folder.py", "").replace(".py", "")
-                account      = self.pyfile.m.core.accountManager.getAccountPlugin(account_name)
+                account      = self.pyload.accountManager.getAccountPlugin(account_name)
 
             if account and hasattr(account, "HOSTER_DOMAIN") and account.HOSTER_DOMAIN:
                 self.HOSTER_DOMAIN = account.HOSTER_DOMAIN
             else:
                 self.fail(_("Missing HOSTER_DOMAIN"))
 
-        if isinstance(self.COOKIES, list):
-            self.COOKIES.insert((self.HOSTER_DOMAIN, "lang", "english"))
+        if self.COOKIES:
+            if isinstance(self.COOKIES, list) and not self.COOKIES.count((self.HOSTER_DOMAIN, "lang", "english")):
+                self.COOKIES.insert((self.HOSTER_DOMAIN, "lang", "english"))
+            else:
+                set_cookie(self.req.cj, self.HOSTER_DOMAIN, "lang", "english")
 
         return super(XFSCrypter, self).prepare()

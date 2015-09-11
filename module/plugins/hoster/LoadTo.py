@@ -6,14 +6,15 @@
 
 import re
 
-from module.plugins.internal.SolveMedia import SolveMedia
+from module.plugins.captcha.SolveMedia import SolveMedia
 from module.plugins.internal.SimpleHoster import SimpleHoster, create_getInfo
 
 
 class LoadTo(SimpleHoster):
     __name__    = "LoadTo"
     __type__    = "hoster"
-    __version__ = "0.24"
+    __version__ = "0.25"
+    __status__  = "testing"
 
     __pattern__ = r'http://(?:www\.)?load\.to/\w+'
     __config__  = [("use_premium", "bool", "Use premium account if available", True)]
@@ -36,23 +37,23 @@ class LoadTo(SimpleHoster):
 
     def setup(self):
         self.multiDL = True
-        self.chunkLimit = 1
+        self.chunk_limit = 1
 
 
-    def handleFree(self, pyfile):
-        # Search for Download URL
+    def handle_free(self, pyfile):
+        #: Search for Download URL
         m = re.search(self.LINK_FREE_PATTERN, self.html)
         if m is None:
             self.error(_("LINK_FREE_PATTERN not found"))
 
         self.link = m.group(1)
 
-        # Set Timer - may be obsolete
+        #: Set Timer - may be obsolete
         m = re.search(self.WAIT_PATTERN, self.html)
         if m:
             self.wait(m.group(1))
 
-        # Load.to is using solvemedia captchas since ~july 2014:
+        #: Load.to is using solvemedia captchas since ~july 2014:
         solvemedia  = SolveMedia(self)
         captcha_key = solvemedia.detect_key()
 
