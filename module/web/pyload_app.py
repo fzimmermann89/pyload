@@ -199,8 +199,9 @@ def downloads():
     }
 
     items = listdir(fs_encode(root))
-
     for item in sorted([fs_decode(x) for x in items]):
+        if item.startswith('.'):
+            continue
         if isdir(save_join(root, item)):
             folder = {
                 'name': item,
