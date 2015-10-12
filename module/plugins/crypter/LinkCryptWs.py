@@ -18,6 +18,7 @@ class LinkCryptWs(Crypter):
     __status__  = "testing"
 
     __pattern__ = r'http://(?:www\.)?linkcrypt\.ws/(dir|container)/(?P<ID>\w+)'
+    __config__  = [("activated", "bool", "Activated", True)]
 
     __description__ = """LinkCrypt.ws decrypter plugin"""
     __license__     = "GPLv3"
@@ -43,6 +44,7 @@ class LinkCryptWs(Crypter):
 
         #: Request package
         self.req.http.c.setopt(pycurl.USERAGENT, "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko")  #: Better chance to not get those key-captchas
+        self.html = self.load(self.pyfile.url)
         self.html = self.load(self.pyfile.url)
 
 
@@ -159,13 +161,12 @@ class LinkCryptWs(Crypter):
 
     def handle_errors(self):
         if self.is_password_protected():
-            self.fail(_("Incorrect password"))
+            self.fail(_("Wrong password"))
 
 
     def handle_captcha_errors(self):
-        if "Your choice was wrong!" in self.html:
-            self.captcha.invalid()
-            self.retry()
+        if "Your choice was wrong" in self.html:
+            self.retry_captcha()
         else:
             self.captcha.correct()
 
@@ -243,7 +244,7 @@ class LinkCryptWs(Crypter):
                 if not clink:
                     continue
 
-                self.log_debug("clink avaible")
+                self.log_debug("clink found")
 
                 package_name, folder_name = self.get_package_info()
                 self.log_debug("Added package with name %s.%s and container link %s" %( package_name, type, clink.group(1)))
@@ -265,15 +266,16 @@ class LinkCryptWs(Crypter):
                 break
 
         if cnl_line:
-            self.log_debug("cnl_line gefunden")
+            self.log_debug("cnl_line found")
 
         try:
             cnl_section = self.handle_javascript(cnl_line)
             (vcrypted, vjk) = self._get_cipher_params(cnl_section)
             for (crypted, jk) in zip(vcrypted, vjk):
                 package_links.extend(self._get_links(crypted, jk))
+
         except Exception:
-            self.log_error(_("Unable to decrypt CNL links (JS Error) try to get over links"))
+            self.log_error(_("Unable to decrypt CNL links (JS Error) try to get over links"), trace=True)
             return self.handle_web_links()
 
         return package_links

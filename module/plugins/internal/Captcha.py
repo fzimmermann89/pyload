@@ -4,7 +4,6 @@ from __future__ import with_statement
 
 import os
 import time
-import traceback
 
 from module.plugins.internal.Plugin import Plugin
 
@@ -12,7 +11,7 @@ from module.plugins.internal.Plugin import Plugin
 class Captcha(Plugin):
     __name__    = "Captcha"
     __type__    = "captcha"
-    __version__ = "0.43"
+    __version__ = "0.46"
     __status__  = "testing"
 
     __description__ = """Base anti-captcha plugin"""
@@ -50,14 +49,13 @@ class Captcha(Plugin):
         pass
 
 
-    def decrypt(self, url, get={}, post={}, ref=False, cookies=True, decode=False,
+    def decrypt(self, url, get={}, post={}, ref=False, cookies=True, decode=False, req=None,
                 input_type='jpg', output_type='textual', ocr=True, timeout=120):
-        img = self.load(url, get=get, post=post, ref=ref, cookies=cookies, decode=decode)
-        return self._decrypt(img, input_type, output_type, ocr, timeout)
+        img = self.load(url, get=get, post=post, ref=ref, cookies=cookies, decode=decode, req=req or self.plugin.req)
+        return self.decrypt_image(img, input_type, output_type, ocr, timeout)
 
 
-    #@TODO: Definitely choose a better name for this method!
-    def _decrypt(self, data, input_type='jpg', output_type='textual', ocr=False, timeout=120):
+    def decrypt_image(self, data, input_type='jpg', output_type='textual', ocr=False, timeout=120):
         """
         Loads a captcha and decrypts it with ocr, plugin, user input
 
@@ -96,8 +94,7 @@ class Captcha(Plugin):
 
                 self.task.setWaiting(max(timeout, 50))  #@TODO: Move to `CaptchaManager` in 0.4.10
                 while self.task.isWaiting():
-                    if self.plugin.pyfile.abort:
-                        self.plugin.abort()
+                    self.plugin.check_abort()
                     time.sleep(1)
 
             finally:
@@ -107,8 +104,7 @@ class Captcha(Plugin):
                 self.fail(self.task.error)
 
             elif not self.task.result:
-                self.invalid()
-                self.plugin.retry(reason=_("No captcha result obtained in appropiate time"))
+                self.plugin.retry_captcha(msg=_("No captcha result obtained in appropriate time"))
 
             result = self.task.result
 
@@ -118,7 +114,6 @@ class Captcha(Plugin):
 
             except OSError, e:
                 self.log_warning(_("Error removing: %s") % tmp_img.name, e)
-                traceback.print_exc()
 
         #self.log_info(_("Captcha result: ") + result)  #@TODO: Remove from here?
 
