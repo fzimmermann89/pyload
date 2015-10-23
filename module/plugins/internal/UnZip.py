@@ -11,8 +11,9 @@ from module.plugins.internal.Extractor import Extractor, ArchiveError, CRCError,
 
 class UnZip(Extractor):
     __name__    = "UnZip"
-    __version__ = "1.16"
-    __status__  = "testing"
+    __type__    = "extractor"
+    __version__ = "1.20"
+    __status__  = "stable"
 
     __description__ = """Zip extractor plugin"""
     __license__     = "GPLv3"
@@ -36,12 +37,21 @@ class UnZip(Extractor):
 
     def verify(self, password=None):
         with zipfile.ZipFile(self.target, 'r', allowZip64=True) as z:
-            badfile = z.testzip()
+            z.setpassword(password)
 
-            if badfile:
-                raise CRCError(badfile)
+            try:
+                badfile = z.testzip()
+
+            except RuntimeError, e:
+                if "encrypted" in e.args[0] or "Bad password" in e.args[0]:
+                    raise PasswordError
+                else:
+                    raise CRCError("Archive damaged")
+
             else:
-                raise PasswordError
+                if badfile:
+                    raise CRCError(badfile)
+
 
 
     def extract(self, password=None):
@@ -60,7 +70,7 @@ class UnZip(Extractor):
             raise ArchiveError(e)
 
         except RuntimeError, e:
-            if "encrypted" in e:
+            if "encrypted" in e.args[0] or "Bad password" in e.args[0]:
                 raise PasswordError
             else:
                 raise ArchiveError(e)

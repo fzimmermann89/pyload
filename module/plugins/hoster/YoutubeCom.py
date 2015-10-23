@@ -6,14 +6,13 @@ import subprocess
 import urllib
 
 from module.plugins.internal.Hoster import Hoster
-from module.plugins.internal.Plugin import replace_patterns, which
-from module.utils import html_unescape
+from module.plugins.internal.utils import html_unescape, replace_patterns, which
 
 
 class YoutubeCom(Hoster):
     __name__    = "YoutubeCom"
     __type__    = "hoster"
-    __version__ = "0.46"
+    __version__ = "0.47"
     __status__  = "testing"
 
     __pattern__ = r'https?://(?:[^/]*\.)?(youtu\.be/|youtube\.com/watch\?(?:.*&)?v=)\w+'

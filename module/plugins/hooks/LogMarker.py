@@ -3,13 +3,13 @@
 import datetime
 
 from module.plugins.internal.Addon import Addon, Expose
-from module.plugins.internal.Plugin import seconds_to_nexthour
+from module.plugins.internal.utils import seconds_to_nexthour
 
 
 class LogMarker(Addon):
     __name__    = "LogMarker"
     __type__    = "hook"
-    __version__ = "0.03"
+    __version__ = "0.04"
     __status__  = "testing"
 
     __config__ = [("activated", "bool", "Activated" , False),

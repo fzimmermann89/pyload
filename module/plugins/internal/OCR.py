@@ -14,14 +14,14 @@ import subprocess
 # import tempfile
 
 from module.plugins.internal.Plugin import Plugin
-from module.utils import save_join as fs_join
+from module.plugins.internal.utils import fs_join
 
 
 class OCR(Plugin):
     __name__    = "OCR"
     __type__    = "ocr"
-    __version__ = "0.20"
-    __status__  = "testing"
+    __version__ = "0.21"
+    __status__  = "stable"
 
     __description__ = """OCR base plugin"""
     __license__     = "GPLv3"
@@ -34,18 +34,9 @@ class OCR(Plugin):
         self.init()
 
 
-    def init(self):
-        """
-        Initialize additional data structures
-        """
-        pass
-
-
     def _log(self, level, plugintype, pluginname, messages):
-        return self.plugin._log(level,
-                                plugintype,
-                                self.plugin.__name__,
-                                (self.__name__,) + messages)
+        messages = (self.__name__,) + messages
+        return self.plugin._log(level, plugintype, self.plugin.__name__, messages)
 
 
     def load_image(self, image):
@@ -88,7 +79,7 @@ class OCR(Plugin):
             tmpTxt.close()
 
         except IOError, e:
-            self.log_error(e, trace=True)
+            self.log_error(e)
             return
 
         self.pyload.log_debug("Saving tiff...")
@@ -139,7 +130,7 @@ class OCR(Plugin):
                 os.remove(tmpSub.name)
 
         except OSError, e:
-            self.log_warning(e, trace=True)
+            self.log_warning(e)
 
 
     def recognize(self, name):

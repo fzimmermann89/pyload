@@ -5,22 +5,21 @@ import re
 
 from module.plugins.captcha.ReCaptcha import ReCaptcha
 from module.plugins.captcha.SolveMedia import SolveMedia
-from module.plugins.internal.Plugin import set_cookie
-from module.plugins.internal.SimpleHoster import SimpleHoster, create_getInfo, seconds_to_midnight
-from module.utils import html_unescape
+from module.plugins.internal.SimpleHoster import SimpleHoster, create_getInfo
+from module.plugins.internal.utils import html_unescape, seconds_to_midnight, set_cookie
 
 
 class XFSHoster(SimpleHoster):
     __name__    = "XFSHoster"
     __type__    = "hoster"
-    __version__ = "0.65"
-    __status__  = "testing"
+    __version__ = "0.70"
+    __status__  = "stable"
 
     __pattern__ = r'^unmatchable$'
-    __config__  = [("activated"       , "bool", "Activated"                                 , True),
-                   ("use_premium"     , "bool", "Use premium account if available"          , True),
-                   ("fallback_premium", "bool", "Fallback to free download if premium fails", True),
-                   ("chk_filesize"    , "bool", "Check file size"                           , True)]
+    __config__  = [("activated"   , "bool", "Activated"                                 , True),
+                   ("use_premium" , "bool", "Use premium account if available"          , True),
+                   ("fallback"    , "bool", "Fallback to free download if premium fails", True),
+                   ("chk_filesize", "bool", "Check file size"                           , True)]
 
     __description__ = """XFileSharing hoster plugin"""
     __license__     = "GPLv3"
@@ -29,44 +28,41 @@ class XFSHoster(SimpleHoster):
                        ("Walter Purcaro", "vuolter@gmail.com"  )]
 
 
-    PLUGIN_DOMAIN = None
+    PLUGIN_DOMAIN         = None
 
-    LEECH_HOSTER = True  #@NOTE: Should be default to False for safe, but I'm lazy...
+    DIRECT_LINK           = None
+    LEECH_HOSTER          = True  #@NOTE: hould be set to `False` by default for safe, but I am lazy...
 
-    NAME_PATTERN = r'(Filename[ ]*:[ ]*</b>(</td><td nowrap>)?|name="fname"[ ]+value="|<[\w^_]+ class="(file)?name">)\s*(?P<N>.+?)(\s*<|")'
-    SIZE_PATTERN = r'(Size[ ]*:[ ]*</b>(</td><td>)?|File:.*>|</font>\s*\(|<[\w^_]+ class="size">)\s*(?P<S>[\d.,]+)\s*(?P<U>[\w^_]+)'
+    NAME_PATTERN          = r'(Filename[ ]*:[ ]*</b>(</td><td nowrap>)?|name="fname"[ ]+value="|<[\w^_]+ class="(file)?name">)\s*(?P<N>.+?)(\s*<|")'
+    SIZE_PATTERN          = r'(Size[ ]*:[ ]*</b>(</td><td>)?|File:.*>|</font>\s*\(|<[\w^_]+ class="size">)\s*(?P<S>[\d.,]+)\s*(?P<U>[\w^_]+)'
 
-    OFFLINE_PATTERN      = r'>\s*\w+ (Not Found|file (was|has been) removed|no longer available)'
-    TEMP_OFFLINE_PATTERN = r'>\s*\w+ server (is in )?(maintenance|maintainance)'
+    OFFLINE_PATTERN       = r'>\s*\w+ (Not Found|file (was|has been) removed|no longer available)'
+    TEMP_OFFLINE_PATTERN  = r'>\s*\w+ server (is in )?(maintenance|maintainance)'
 
-    WAIT_PATTERN         = r'<span id="countdown_str".*>(\d+)</span>|id="countdown" value=".*?(\d+).*?"'
-    PREMIUM_ONLY_PATTERN = r'>This file is available for Premium Users only'
-    HAPPY_HOUR_PATTERN   = r'>[Hh]appy hour'
-    ERROR_PATTERN        = r'(?:class=["\']err["\'].*?>|<[Cc]enter><b>|>Error</td>|>\(ERROR:)(?:\s*<.+?>\s*)*(.+?)(?:["\']|<|\))'
+    WAIT_PATTERN          = r'<span id="countdown_str".*>(\d+)</span>|id="countdown" value=".*?(\d+).*?"'
+    PREMIUM_ONLY_PATTERN  = r'>This file is available for Premium Users only'
+    HAPPY_HOUR_PATTERN    = r'>[Hh]appy hour'
+    ERROR_PATTERN         = r'(?:class=["\']err["\'].*?>|<[Cc]enter><b>|>Error</td>|>\(ERROR:)(?:\s*<.+?>\s*)*(.+?)(?:["\']|<|\))'
 
-    LINK_LEECH_PATTERN = r'<h2>Download Link</h2>\s*<textarea[^>]*>([^<]+)'
+    LINK_LEECH_PATTERN    = r'<h2>Download Link</h2>\s*<textarea[^>]*>([^<]+)'
 
     CAPTCHA_PATTERN       = r'(https?://[^"\']+?/captchas?/[^"\']+)'
     CAPTCHA_BLOCK_PATTERN = r'>Enter code.*?<div.*?>(.+?)</div>'
     RECAPTCHA_PATTERN     = None
     SOLVEMEDIA_PATTERN    = None
 
-    FORM_PATTERN    = None
-    FORM_INPUTS_MAP = None  #: Dict passed as input_names to parse_html_form
+    FORM_PATTERN          = None
+    FORM_INPUTS_MAP       = None  #: Dict passed as `input_names` to `parse_html_form`
 
 
     def setup(self):
         self.chunk_limit     = -1 if self.premium else 1
-        self.resume_download = self.multiDL = self.premium
+        self.multiDL         = self.premium
+        self.resume_download = self.premium
 
 
-    def set_xfs_cookie(self):
-        if not self.PLUGIN_DOMAIN:
-            self.log_error(_("Unable to set xfs cookie due missing PLUGIN_DOMAIN"))
-            return
-
+    def _set_xfs_cookie(self):
         cookie = (self.PLUGIN_DOMAIN, "lang", "english")
-
         if isinstance(self.COOKIES, list) and cookie not in self.COOKIES:
             self.COOKIES.insert(cookie)
         else:
@@ -74,22 +70,11 @@ class XFSHoster(SimpleHoster):
 
 
     def prepare(self):
-        """
-        Initialize important variables
-        """
         if not self.PLUGIN_DOMAIN:
-            if self.account:
-                account = self.account
-            else:
-                account = self.pyload.accountManager.getAccountPlugin(self.classname)
-
-            if account and hasattr(account, "PLUGIN_DOMAIN") and account.PLUGIN_DOMAIN:
-                self.PLUGIN_DOMAIN = account.PLUGIN_DOMAIN
-            else:
-                self.fail(_("Missing PLUGIN_DOMAIN"))
+            self.fail(_("Missing PLUGIN DOMAIN"))
 
         if self.COOKIES:
-            self.set_xfs_cookie()
+            self._set_xfs_cookie()
 
         if not self.LINK_PATTERN:
             pattern = r'(?:file: "(.+?)"|(https?://(?:www\.)?([^/]*?%s|\d+\.\d+\.\d+\.\d+)(\:\d+)?(/d/|(/files)?/\d+/\w+/).+?)["\'<])'
@@ -103,7 +88,7 @@ class XFSHoster(SimpleHoster):
 
     def handle_free(self, pyfile):
         for i in xrange(1, 6):
-            self.log_debug("Getting download link #%d" % i)
+            self.log_debug("Getting download link #%d..." % i)
 
             self.check_errors()
 
@@ -111,7 +96,7 @@ class XFSHoster(SimpleHoster):
             if m is not None:
                 break
 
-            data = self.get_post_parameters()
+            data = self._post_parameters()
 
             self.html = self.load(pyfile.url, post=data, redirect=False)
 
@@ -188,7 +173,7 @@ class XFSHoster(SimpleHoster):
             self.link = header.get('location')
 
 
-    def get_post_parameters(self):
+    def _post_parameters(self):
         if self.FORM_PATTERN or self.FORM_INPUTS_MAP:
             action, inputs = self.parse_html_form(self.FORM_PATTERN or "", self.FORM_INPUTS_MAP or {})
         else:
@@ -215,9 +200,8 @@ class XFSHoster(SimpleHoster):
                     wait_time = int(m.group(1))
                     self.set_wait(wait_time)
                     self.set_reconnect(False)
-
-                self.handle_captcha(inputs)
-                self.wait()
+                    self.handle_captcha(inputs)
+                    self.wait()
         else:
             inputs['referer'] = self.pyfile.url
 

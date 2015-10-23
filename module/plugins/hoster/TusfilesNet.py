@@ -8,7 +8,7 @@ from module.plugins.internal.XFSHoster import XFSHoster, create_getInfo
 class TusfilesNet(XFSHoster):
     __name__    = "TusfilesNet"
     __type__    = "hoster"
-    __version__ = "0.12"
+    __version__ = "0.15"
     __status__  = "testing"
 
     __pattern__ = r'https?://(?:www\.)?tusfiles\.net/\w{12}'
@@ -19,13 +19,15 @@ class TusfilesNet(XFSHoster):
     __authors__     = [("Walter Purcaro", "vuolter@gmail.com"),
                        ("guidobelix", "guidobelix@hotmail.it")]
 
+    PLUGIN_DOMAIN = "tusfiles.net"
 
     INFO_PATTERN    = r'\](?P<N>.+) - (?P<S>[\d.,]+) (?P<U>[\w^_]+)\['
 
 
     def setup(self):
         self.chunk_limit     = -1
-        self.multiDL        = True
+        self.multiDL         = True
+        self.limitDL         = 2
         self.resume_download = True
 
 

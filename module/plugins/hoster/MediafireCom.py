@@ -8,11 +8,11 @@ from module.plugins.internal.SimpleHoster import SimpleHoster, create_getInfo
 class MediafireCom(SimpleHoster):
     __name__    = "MediafireCom"
     __type__    = "hoster"
-    __version__ = "0.91"
+    __version__ = "0.92"
     __status__  = "testing"
 
     __pattern__ = r'https?://(?:www\.)?mediafire\.com/(file/|view/\??|download(\.php\?|/)|\?)(?P<ID>\w+)'
-    __config__  = [("activated", "bool", "Activated", True),
+    __config__  = [("activated"  , "bool", "Activated"                       , True),
                    ("use_premium", "bool", "Use premium account if available", True)]
 
     __description__ = """Mediafire.com hoster plugin"""
@@ -34,7 +34,7 @@ class MediafireCom(SimpleHoster):
 
     def setup(self):
         self.resume_download = True
-        self.multiDL        = True
+        self.multiDL         = True
 
 
     def handle_captcha(self):

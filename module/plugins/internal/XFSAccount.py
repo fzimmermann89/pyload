@@ -4,16 +4,21 @@ import re
 import time
 import urlparse
 
-from module.plugins.internal.Account import Account
-# from module.plugins.internal.MultiAccount import MultiAccount
-from module.plugins.internal.Plugin import parse_html_form, parse_time, set_cookie
+from module.plugins.internal.MultiAccount import MultiAccount
+from module.plugins.internal.utils import parse_html_form, parse_time, set_cookie
 
 
-class XFSAccount(Account):
+class XFSAccount(MultiAccount):
     __name__    = "XFSAccount"
     __type__    = "account"
-    __version__ = "0.52"
-    __status__  = "testing"
+    __version__ = "0.55"
+    __status__  = "stable"
+
+    __config__ = [("activated"     , "bool"               , "Activated"                    , True ),
+                  ("multi"         , "bool"               , "Multi-hoster"                 , True ),
+                  ("multi_mode"    , "all;listed;unlisted", "Hosters to use"               , "all"),
+                  ("multi_list"    , "str"                , "Hoster list (comma separated)", ""   ),
+                  ("multi_interval", "int"                , "Reload interval in hours"     , 12   )]
 
     __description__ = """XFileSharing account plugin"""
     __license__     = "GPLv3"
@@ -21,38 +26,51 @@ class XFSAccount(Account):
                        ("Walter Purcaro", "vuolter@gmail.com"  )]
 
 
-    PLUGIN_DOMAIN = None
-    PLUGIN_URL    = None
-    LOGIN_URL     = None
+    PLUGIN_DOMAIN         = None
+    PLUGIN_URL            = None
+    LOGIN_URL             = None
 
-    COOKIES = True
+    COOKIES               = True
 
-    PREMIUM_PATTERN = r'\(Premium only\)'
+    PREMIUM_PATTERN       = r'\(Premium only\)'
 
-    VALID_UNTIL_PATTERN = r'Premium.[Aa]ccount expire:.*?(\d{1,2} [\w^_]+ \d{4})'
+    VALID_UNTIL_PATTERN   = r'Premium.[Aa]ccount expire:.*?(\d{1,2} [\w^_]+ \d{4})'
 
-    TRAFFIC_LEFT_PATTERN = r'Traffic available today:.*?<b>\s*(?P<S>[\d.,]+|[Uu]nlimited)\s*(?:(?P<U>[\w^_]+)\s*)?</b>'
-    TRAFFIC_LEFT_UNIT    = "MB"  #: Used only if no group <U> was found
+    TRAFFIC_LEFT_PATTERN  = r'Traffic available today:.*?<b>\s*(?P<S>[\d.,]+|[Uu]nlimited)\s*(?:(?P<U>[\w^_]+)\s*)?</b>'
+    TRAFFIC_LEFT_UNIT     = "MB"  #: Used only if no group <U> was found
 
     LEECH_TRAFFIC_PATTERN = r'Leech Traffic left:<b>.*?(?P<S>[\d.,]+|[Uu]nlimited)\s*(?:(?P<U>[\w^_]+)\s*)?</b>'
     LEECH_TRAFFIC_UNIT    = "MB"  #: Used only if no group <U> was found
 
-    LOGIN_FAIL_PATTERN = r'Incorrect Login or Password|account was banned|Error<'
-    LOGIN_BAN_PATTERN  = r'>(Your IP.+?)<a'
-    LOGIN_SKIP_PATTERN = r'op=logout'
+    LOGIN_FAIL_PATTERN    = r'Incorrect Login or Password|account was banned|Error<'
+    LOGIN_BAN_PATTERN     = r'>(Your IP.+?)<a'
+    LOGIN_SKIP_PATTERN    = r'op=logout'
 
 
-    def set_xfs_cookie(self):
-        if not self.PLUGIN_DOMAIN:
-            self.log_error(_("Unable to set xfs cookie due missing PLUGIN_DOMAIN"))
-            return
-
+    def _set_xfs_cookie(self):
         cookie = (self.PLUGIN_DOMAIN, "lang", "english")
-
         if isinstance(self.COOKIES, list) and cookie not in self.COOKIES:
             self.COOKIES.insert(cookie)
         else:
             set_cookie(self.req.cj, *cookie)
+
+
+    def setup(self):
+        if not self.PLUGIN_DOMAIN:
+            self.fail_login(_("Missing PLUGIN DOMAIN"))
+
+        if not self.PLUGIN_URL:
+            self.PLUGIN_URL = "http://www.%s/" % self.PLUGIN_DOMAIN
+
+        if not self.LOGIN_URL:
+            self.LOGIN_URL  = urlparse.urljoin(self.PLUGIN_URL, "login.html")
+
+        if self.COOKIES:
+            self._set_xfs_cookie()
+
+
+    def grab_hosters(self, user, password, data):
+        pass
 
 
     def grab_info(self, user, password, data):
@@ -91,7 +109,7 @@ class XFSAccount(Account):
                     premium    = False
                     validuntil = None  #: Registered account type (not premium)
         else:
-            self.log_debug("VALID_UNTIL_PATTERN not found")
+            self.log_debug("VALID UNTIL PATTERN not found")
 
         m = re.search(self.TRAFFIC_LEFT_PATTERN, self.html)
         if m is not None:
@@ -119,7 +137,7 @@ class XFSAccount(Account):
             except Exception, e:
                 self.log_error(e)
         else:
-            self.log_debug("TRAFFIC_LEFT_PATTERN not found")
+            self.log_debug("TRAFFIC LEFT PATTERN not found")
 
         leech = [m.groupdict() for m in re.finditer(self.LEECH_TRAFFIC_PATTERN, self.html)]
         if leech:
@@ -146,7 +164,7 @@ class XFSAccount(Account):
             except Exception, e:
                 self.log_error(e)
         else:
-            self.log_debug("LEECH_TRAFFIC_PATTERN not found")
+            self.log_debug("LEECH TRAFFIC PATTERN not found")
 
         return {'validuntil'  : validuntil,
                 'trafficleft' : trafficleft,
@@ -155,19 +173,6 @@ class XFSAccount(Account):
 
 
     def signin(self, user, password, data):
-        if self.PLUGIN_DOMAIN:
-            if not self.PLUGIN_URL:
-                self.PLUGIN_URL = "http://www.%s/" % self.PLUGIN_DOMAIN
-
-            if self.COOKIES:
-                self.set_xfs_cookie()
-
-        if not self.PLUGIN_URL:
-            self.fail_login(_("Missing PLUGIN_URL"))
-
-        if not self.LOGIN_URL:
-            self.LOGIN_URL  = urlparse.urljoin(self.PLUGIN_URL, "login.html")
-
         self.html = self.load(self.LOGIN_URL, cookies=self.COOKIES)
 
         if re.search(self.LOGIN_SKIP_PATTERN, self.html):
@@ -207,7 +212,10 @@ class XFSAccount(Account):
             finally:
                 errmsg = re.sub(r'<.*?>', " ", errmsg.strip())
 
-            self.timeout = parse_time(errmsg)
+            new_timeout = parse_time(errmsg)
+            if new_timeout > self.timeout:
+                self.timeout = new_timeout
+
             self.fail_login(errmsg)
 
         m = re.search(self.LOGIN_FAIL_PATTERN, self.html)

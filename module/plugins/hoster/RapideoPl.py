@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from module.common.json_layer import json_loads
-from module.plugins.internal.MultiHoster import MultiHoster
+from module.plugins.internal.MultiHoster import MultiHoster, create_getInfo
+from module.plugins.internal.utils import json
 
 
 class RapideoPl(MultiHoster):
     __name__    = "RapideoPl"
     __type__    = "hoster"
-    __version__ = "0.05"
+    __version__ = "0.07"
     __status__  = "testing"
 
     __pattern__ = r'^unmatchable$'
@@ -70,7 +70,7 @@ class RapideoPl(MultiHoster):
             self.temp_offline("Query error #1")
 
         try:
-            parsed = json_loads(data)
+            parsed = json.loads(data)
 
         except Exception:
             self.temp_offline("Data not found")
@@ -100,3 +100,6 @@ class RapideoPl(MultiHoster):
 
         except Exception:
             self.temp_offline("Query error #2")
+
+
+getInfo = create_getInfo(RapideoPl)
